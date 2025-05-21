@@ -1,111 +1,720 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "workspaceName": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the Log Analytics workspace (and Microsoft Sentinel workspace)."
-      }
-    },
-    "alertRuleName": {
-      "type": "string",
-      "defaultValue": "Netskope_High_DLP_Incidents_Rule",
-      "metadata": {
-        "description": "Name for the Microsoft Sentinel analytic rule."
-      }
-    },
-    "workspaceLocation": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]",
-      "metadata": {
-        "description": "The location of the Log Analytics workspace."
-      }
-    }
-  },
-  "resources": [
-    {
-      "type": "Microsoft.OperationalInsights/workspaces",
-      "apiVersion": "2020-08-01",
-      "name": "[parameters('workspaceName')]",
-      "location": "[parameters('workspaceLocation')]",
-      "properties": {
-        "sku": {
-          "name": "PerGB2018"
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the Log Analytics workspace for Microsoft Sentinel."
+            }
+        },
+        "workspaceId": {
+            "type": "string",
+            "metadata": {
+                "description": "The ID of the Log Analytics workspace (used for generating unique rule IDs)."
+            }
+        },
+        "workspaceLocation": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "The Azure region where the Microsoft Sentinel workspace resides."
+            }
         }
-      },
-      "resources": [
+    },
+    "variables": {
+        "rule_1_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - High Severity DLP Policy Violation'))]",
+        "rule_2_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Multiple Distinct DLP Violations by Single User (Short Timeframe)'))]",
+        "rule_3_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Malware Detected in File Transfer'))]",
+        "rule_4_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Critical Severity Malware Detected'))]",
+        "rule_5_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - User Activity from Atypically Accessed Country'))]",
+        "rule_6_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Large Volume Data Upload to Unsanctioned Application Category'))]",
+        "rule_7_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Access to Risky Application Category'))]",
+        "rule_8_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Anomalous Data Egress (Single Large Upload)'))]",
+        "rule_9_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Upload of Suspicious File Types to Cloud Application'))]",
+        "rule_10_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Critical Policy Block Action Detected'))]",
+        "rule_11_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - User Activity from Multiple New Countries within Short Timeframe'))]",
+        "rule_12_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Sensitive File Shared Externally via Cloud App (DLP Based)'))]",
+        "rule_13_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Activity from Account on Watchlist (e.g., Terminated Users)'))]",
+        "rule_14_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Excessive Data Download Activity by Single User'))]",
+        "rule_15_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Connection to Known Malicious IP Address or Domain'))]",
+        "rule_16_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Use of Unapproved or Outdated User-Agent Browser'))]",
+        "rule_17_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - File Triggering Multiple Distinct DLP Rules'))]",
+        "rule_18_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Data Uploaded to Personal Cloud Storage Application'))]",
+        "rule_19_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Repeated Critical Policy Violations by User'))]",
+        "rule_20_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - High Risk Score Activity Detected by Netskope'))]",
+        "rule_21_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Download of Unsigned Executable File'))]",
+        "rule_22_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Access to Cloud Application with Low Cloud Confidence Index (CCI CCL)'))]",
+        "rule_23_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Anomalous IaaS Activity or High Severity Remediation'))]",
+        "rule_24_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Attempted Data Exfiltration via Uncategorized URL'))]",
+        "rule_25_Id": "[guid(concat(parameters('workspaceId'), 'Netskope - Public Exposure of Sensitive File via Sharing'))]",
+        "placeholderQueryTemplate": "Netskope_CL\n| where TimeGenerated > ago(queryFrequency)\n// --- Replace the following with your specific detection logic based on the rule's purpose ---\n// Example: | where placeholder_field == 'some_value'\n// Key Fields for this rule: {KeyFields}\n// --- End of custom detection logic ---\n// --- Ensure the KQL query outputs columns for entity mapping ---\n| extend AccountCustomEntity = column_ifexists('user', ''),\n           SrcIPCustomEntity = column_ifexists('srcip', ''),\n           DstIPCustomEntity = column_ifexists('dstip', ''),\n           HostCustomEntity = column_ifexists('hostname', column_ifexists('computer_name', column_ifexists('device', ''))),\n           URLCustomEntity = column_ifexists('url', ''),\n           FileHashCustomEntity = column_ifexists('file_md5', column_ifexists('sha256', '')),\n           FileNameCustomEntity = column_ifexists('filename', ''),\n           AppNameCustomEntity = column_ifexists('app', ''),\n           ProcessCustomEntity = column_ifexists('process_name', ''),\n           MalwareNameCustomEntity = column_ifexists('malware_type', column_ifexists('mal_type','N/A')),\n           PolicyCustomEntity = column_ifexists('policy_name', column_ifexists('policy', '')),\n           DlpRuleCustomEntity = column_ifexists('dlp_rule', ''),\n           DlpProfileCustomEntity = column_ifexists('dlp_profile_name', '')"
+    },
+    "resources": [
         {
-          "type": "Microsoft.SecurityInsights/alertRules", // <<<--- THIS IS THE CORRECTED LINE. "providers/" IS REMOVED
-          "apiVersion": "2023-08-01-preview",
-          "name": "[parameters('alertRuleName')]",
-          "dependsOn": [
-            "[parameters('workspaceName')]"
-          ],
-          "properties": {
-            "displayName": "Netskope: High Volume of DLP Incidents Detected",
-            "description": "Detects a high volume of Data Loss Prevention (DLP) incidents from Netskope web transactions within a 1-hour period. This rule triggers if any DLP incidents are found (threshold > 0), indicating potential policy violations or data exfiltration attempts.",
-            "query": "NetskopeWebTransactions5_CL\\n| where TimeGenerated > ago(1h)\\n| where isnotempty(dlp_incident_id)\\n| summarize IncidentCount = count() by dlp_rule_severity, dlp_rule, user, app, srcip\\n| where IncidentCount > 0\\n| extend AccountCustomEntity = user\\n| extend IPCustomEntity = srcip\\n| extend CloudApplicationCustomEntity = app",
-            "queryFrequency": "PT5M",
-            "queryPeriod": "PT1H",
-            "triggerOperator": "GreaterThan",
-            "triggerThreshold": 0,
-            "severity": "Medium",
-            "tactics": [
-              "Exfiltration",
-              "Collection"
-            ],
-            "enabled": true,
-            "suppressionDuration": "PT1H",
-            "suppressionEnabled": true,
-            "eventGroupingSettings": {
-              "aggregationKind": "AlertPerResult"
-            },
-            "alertDetailsOverride": {
-                "alertDisplayNameFormat": "Netskope: High DLP Incidents - Rule '{{dlp_rule}}' by '{{user}}' on '{{app}}'",
-                "alertDescriptionFormat": "Detected {{IncidentCount}} DLP incidents for rule '{{dlp_rule}}' with severity '{{dlp_rule_severity}}' involving user '{{user}}' and application '{{app}}' from IP '{{srcip}}'."
-            },
-            "customDetails": {
-                "DLP Rule": "dlp_rule",
-                "DLP Severity": "dlp_rule_severity",
-                "Affected User": "user",
-                "Affected App": "app",
-                "Source IP": "srcip",
-                "Incident Count": "IncidentCount"
-            },
-            "entityMappings": [
-                {
-                    "entityType": "Account",
-                    "fieldMappings": [
-                        {
-                            "identifier": "FullName",
-                            "value": "user"
-                        }
-                    ]
-                },
-                {
-                    "entityType": "IP",
-                    "fieldMappings": [
-                        {
-                            "identifier": "Address",
-                            "value": "srcip"
-                        }
-                    ]
-                },
-                {
-                    "entityType": "CloudApplication",
-                    "fieldMappings": [
-                        {
-                            "identifier": "Name",
-                            "value": "app"
-                        }
-                    ]
-                }
-            ],
-            "kind": "Scheduled"
-          }
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_1_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - High Severity DLP Policy Violation",
+                "description": "Detects when a Netskope Data Loss Prevention (DLP) policy with high or critical severity is triggered, indicating potential exposure of sensitive data.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'dlp_profile_name, dlp_rule_severity, action, user, filename, app')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Exfiltration", "Collection"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "File", "fieldMappings": [{"identifier": "Name", "columnName": "FileNameCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]},
+                    {"entityType": "SecurityAlert", "fieldMappings": [{"identifier": "DisplayName", "columnName": "DlpProfileCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_2_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Multiple Distinct DLP Violations by Single User (Short Timeframe)",
+                "description": "Alerts when a single user triggers multiple distinct DLP incidents or rules within a short period (e.g., 3+ incidents in 1 hour), potentially indicating a concerted exfiltration attempt or misconfigured access.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, dlp_incident_id, dlp_rule, TimeGenerated')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Exfiltration", "Collection"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_3_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Malware Detected in File Transfer",
+                "description": "Triggers when Netskope identifies malware in a file being uploaded, downloaded, or shared.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'malware_id, malware_type, filename, user, srcip, dstip, action, app')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Impact", "Execution"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "File", "fieldMappings": [{"identifier": "Name", "columnName": "FileNameCustomEntity"}]},
+                    {"entityType": "IP", "fieldMappings": [{"identifier": "Address", "columnName": "SrcIPCustomEntity"}]},
+                    {"entityType": "IP", "fieldMappings": [{"identifier": "Address", "columnName": "DstIPCustomEntity"}]},
+                    {"entityType": "Malware", "fieldMappings": [{"identifier": "Name", "columnName": "MalwareNameCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_4_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Critical Severity Malware Detected",
+                "description": "Specifically alerts on malware detections flagged with critical severity by Netskope.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'malware_id, malware_severity, filename, user, app')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Impact", "Execution"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "File", "fieldMappings": [{"identifier": "Name", "columnName": "FileNameCustomEntity"}]},
+                    {"entityType": "Malware", "fieldMappings": [{"identifier": "Name", "columnName": "MalwareNameCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_5_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - User Activity from Atypically Accessed Country",
+                "description": "Detects user activity originating from a country not typically associated with that user or the organization. This might require baselining or a watchlist of common countries.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, src_country, app, activity')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["InitialAccess", "CredentialAccess"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "IP", "fieldMappings": [{"identifier": "Address", "columnName": "SrcIPCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_6_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Large Volume Data Upload to Unsanctioned Application Category",
+                "description": "Alerts when a user uploads a significant volume of data (e.g., >100MB in an hour) to applications belonging to an unsanctioned or risky category.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, action (upload), appcategory, numbytes or file_size, app')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Exfiltration", "Collection"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_7_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Access to Risky Application Category",
+                "description": "Identifies user access to applications categorized as high-risk, such as anonymizers, peer-to-peer file sharing, or known malicious sites.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, app, appcategory, url')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["CommandAndControl", "DefenseEvasion"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]},
+                    {"entityType": "URL", "fieldMappings": [{"identifier": "Url", "columnName": "URLCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_8_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Anomalous Data Egress (Single Large Upload)",
+                "description": "Detects a single file upload that exceeds a defined large size threshold (e.g., >50MB), potentially indicating unauthorized exfiltration.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, action (upload), filename, file_size or numbytes, app, dstip')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Exfiltration"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "File", "fieldMappings": [{"identifier": "Name", "columnName": "FileNameCustomEntity"}]},
+                    {"entityType": "IP", "fieldMappings": [{"identifier": "Address", "columnName": "DstIPCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_9_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Upload of Suspicious File Types to Cloud Application",
+                "description": "Alerts when unusual or high-risk file types (e.g., .pst, .rar, .zip, .exe, .bat) are uploaded to cloud applications, especially unsanctioned ones.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, action (upload), filename (extension), file_type, app, appcategory')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Exfiltration", "DefenseEvasion"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "File", "fieldMappings": [{"identifier": "Name", "columnName": "FileNameCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_10_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Critical Policy Block Action Detected",
+                "description": "Triggers when a Netskope policy explicitly blocks a user's action due to a critical violation.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, policy_name, policy_action (block), activity, app, alert_name')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Impact"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]},
+                    {"entityType": "SecurityAlert", "fieldMappings": [{"identifier": "DisplayName", "columnName": "PolicyCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_11_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - User Activity from Multiple New Countries within Short Timeframe",
+                "description": "Detects if a user account shows activity from several geographically distinct countries within a condensed timeframe (e.g., 3+ countries in 24 hours), which could indicate a compromised account.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, src_country, TimeGenerated')]",
+                "queryFrequency": "PT4H",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["InitialAccess", "CredentialAccess"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "IP", "fieldMappings": [{"identifier": "Address", "columnName": "SrcIPCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_12_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Sensitive File Shared Externally via Cloud App (DLP Based)",
+                "description": "Alerts when a file identified by a DLP profile (e.g., containing PII, financial data) is shared with external users or domains via a cloud application.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, action (share), dlp_profile_name, filename, app, shared_with')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Exfiltration"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "File", "fieldMappings": [{"identifier": "Name", "columnName": "FileNameCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]},
+                    {"entityType": "SecurityAlert", "fieldMappings": [{"identifier": "DisplayName", "columnName": "DlpProfileCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_13_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Activity from Account on Watchlist (e.g., Terminated Users)",
+                "description": "Generates an alert if any activity is detected from a user account that is on a watchlist (e.g., terminated employees, users on leave). Requires maintaining a watchlist.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, activity, app, TimeGenerated, (correlate user with watchlist)')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Persistence", "PrivilegeEscalation"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_14_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Excessive Data Download Activity by Single User",
+                "description": "Detects when a user downloads an unusually large amount of data or number of files over a period (e.g., >500MB or 100 files in an hour), which might indicate data hoarding or exfiltration preparation.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, action (download), numbytes or file_size (sum over time), app')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Collection", "Exfiltration"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_15_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Connection to Known Malicious IP Address or Domain",
+                "description": "Alerts when traffic is detected to or from an IP address or domain known to be malicious. This rule typically requires integration with a threat intelligence platform/feed.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, dstip, domain, url, srcip, app, (correlate with TI)')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["CommandAndControl", "Impact"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "IP", "fieldMappings": [{"identifier": "Address", "columnName": "SrcIPCustomEntity"}]},
+                    {"entityType": "IP", "fieldMappings": [{"identifier": "Address", "columnName": "DstIPCustomEntity"}]},
+                    {"entityType": "URL", "fieldMappings": [{"identifier": "Url", "columnName": "URLCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_16_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Use of Unapproved or Outdated User-Agent Browser",
+                "description": "Identifies user activity from browsers or user-agents that are not approved by corporate policy or are known to be outdated and vulnerable.",
+                "severity": "Low",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, useragent, browser, app')]",
+                "queryFrequency": "PT6H",
+                "queryPeriod": "PT6H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "P1D",
+                "suppressionEnabled": false,
+                "tactics": ["DefenseEvasion"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_17_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - File Triggering Multiple Distinct DLP Rules",
+                "description": "Alerts when a single file or data transaction triggers multiple different DLP rules, indicating a high concentration of sensitive information.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, filename, dlp_file, dlp_profile_name (count distinct), dlp_incident_id')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Collection", "Exfiltration"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "File", "fieldMappings": [{"identifier": "Name", "columnName": "FileNameCustomEntity"}]},
+                    {"entityType": "SecurityAlert", "fieldMappings": [{"identifier": "DisplayName", "columnName": "DlpRuleCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_18_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Data Uploaded to Personal Cloud Storage Application",
+                "description": "Detects uploads to cloud storage applications typically used for personal accounts (e.g., personal OneDrive, Google Drive, Dropbox) if not sanctioned.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, action (upload), app (match list), appcategory (Cloud Storage)')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Exfiltration"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_19_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Repeated Critical Policy Violations by User",
+                "description": "Triggers if a user repeatedly violates critical policies resulting in blocks or high severity alerts within a short window (e.g., 5+ critical alerts/blocks in 1 hour).",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, policy_action, alert_name, severity (High/Critical), TimeGenerated')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Impact", "DefenseEvasion"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "SecurityAlert", "fieldMappings": [{"identifier": "DisplayName", "columnName": "PolicyCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_20_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - High Risk Score Activity Detected by Netskope",
+                "description": "Alerts when an activity is assigned a high risk score by Netskope's internal risk engine.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, risk_score (> threshold), activity, app, alert_name')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Impact", "Exfiltration", "InitialAccess"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_21_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Download of Unsigned Executable File",
+                "description": "Detects the download of executable files (.exe, .msi, .dll etc.) that are not digitally signed, which can be an indicator of malware or unapproved software.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, action (download), filename, executable_signed (false), file_type')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Execution", "DefenseEvasion"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "File", "fieldMappings": [{"identifier": "Name", "columnName": "FileNameCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_22_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Access to Cloud Application with Low Cloud Confidence Index (CCI CCL)",
+                "description": "Alerts when users access cloud applications that have a low Cloud Confidence Index (CCI) or Cloud Confidence Level (CCL) as rated by Netskope, indicating potential risks associated with the app.",
+                "severity": "Low",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, app, cci or ccl (low), activity')]",
+                "queryFrequency": "PT6H",
+                "queryPeriod": "PT6H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "P1D",
+                "suppressionEnabled": false,
+                "tactics": ["InitialAccess", "DefenseEvasion"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_23_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Anomalous IaaS Activity or High Severity Remediation",
+                "description": "Detects potentially risky activities or high severity automated remediations within IaaS environments (if Netskope provides these logs), such as deletion of critical resources or security group misconfigurations.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, cloud_provider, instance_name, resource_group, activity, action, iaas_remediation_action, alert_name')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Impact", "DefenseEvasion"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "AzureResource", "fieldMappings": [{"identifier": "ResourceId", "columnName": "HostCustomEntity"}]} // Assuming instance_name or similar maps to a resource concept
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_24_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Attempted Data Exfiltration via Uncategorized URL",
+                "description": "Identifies users uploading data to URLs or websites that are not categorized by Netskope, which could be an attempt to bypass controls using newly created or obscure sites.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, action (upload), url, appcategory (Uncategorized), numbytes')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Exfiltration", "CommandAndControl"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "URL", "fieldMappings": [{"identifier": "Url", "columnName": "URLCustomEntity"}]}
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "name": "[concat(parameters('workspaceName'),'/Microsoft.SecurityInsights/', variables('rule_25_Id'))]",
+            "apiVersion": "2023-09-01-preview",
+            "kind": "Scheduled",
+            "location": "[parameters('workspaceLocation')]",
+            "properties": {
+                "displayName": "Netskope - Public Exposure of Sensitive File via Sharing",
+                "description": "Triggers when a file containing sensitive information (as identified by a DLP profile) is shared with 'public' or 'anyone with the link' exposure.",
+                "severity": "High",
+                "enabled": true,
+                "query": "[replace(variables('placeholderQueryTemplate'), '{KeyFields}', 'user, filename, dlp_profile_name, app, action (share), file_exposure (public)')]",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": ["Exfiltration", "Collection"],
+                "techniques": [],
+                "entityMappings": [
+                    {"entityType": "Account", "fieldMappings": [{"identifier": "FullName", "columnName": "AccountCustomEntity"}]},
+                    {"entityType": "File", "fieldMappings": [{"identifier": "Name", "columnName": "FileNameCustomEntity"}]},
+                    {"entityType": "CloudApplication", "fieldMappings": [{"identifier": "Name", "columnName": "AppNameCustomEntity"}]},
+                    {"entityType": "SecurityAlert", "fieldMappings": [{"identifier": "DisplayName", "columnName": "DlpProfileCustomEntity"}]}
+                ]
+            }
         }
-      ]
-    }
-  ]
+    ]
 }
