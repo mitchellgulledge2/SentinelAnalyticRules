@@ -1,1 +1,97 @@
-test
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Log Analytics workspace (and Microsoft Sentinel workspace)."
+      }
+    },
+    "workspaceResourceId": {
+      "type": "string",
+      "metadata": {
+        "description": "The full Resource ID of the Log Analytics workspace (e.g., /subscriptions/<subid>/resourceGroups/<rgname>/providers/Microsoft.OperationalInsights/workspaces/<wsname>)."
+      }
+    },
+    "alertRuleName": {
+      "type": "string",
+      "defaultValue": "Netskope_High_DLP_Incidents_Rule",
+      "metadata": {
+        "description": "Name for the Microsoft Sentinel analytic rule."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.SecurityInsights/alertRules",
+      "apiVersion": "2023-08-01-preview",
+      "name": "[parameters('alertRuleName')]",
+      "dependsOn": [
+        "[parameters('workspaceResourceId')]"
+      ],
+      "properties": {
+        "displayName": "Netskope: High Volume of DLP Incidents Detected",
+        "description": "Detects a high volume of Data Loss Prevention (DLP) incidents from Netskope web transactions within a 1-hour period. This rule triggers if any DLP incidents are found (threshold > 0), indicating potential policy violations or data exfiltration attempts.",
+        "query": "NetskopeWebTransactions5_CL\\n| where TimeGenerated > ago(1h)\\n| where isnotempty(dlp_incident_id)\\n| summarize IncidentCount = count() by dlp_rule_severity, dlp_rule, user, app, srcip\\n| where IncidentCount > 0\\n| extend AccountCustomEntity = user\\n| extend IPCustomEntity = srcip\\n| extend CloudApplicationCustomEntity = app",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "severity": "Medium",
+        "tactics": [
+          "Exfiltration",
+          "Collection"
+        ],
+        "enabled": true,
+        "suppressionDuration": "PT1H",
+        "suppressionEnabled": true,
+        "eventGroupingSettings": {
+          "aggregationKind": "AlertPerResult"
+        },
+        "alertDetailsOverride": {
+            "alertDisplayNameFormat": "Netskope: High DLP Incidents - Rule '{{dlp_rule}}' by '{{user}}' on '{{app}}'",
+            "alertDescriptionFormat": "Detected {{IncidentCount}} DLP incidents for rule '{{dlp_rule}}' with severity '{{dlp_rule_severity}}' involving user '{{user}}' and application '{{app}}' from IP '{{srcip}}'."
+        },
+        "customDetails": {
+            "DLP Rule": "dlp_rule",
+            "DLP Severity": "dlp_rule_severity",
+            "Affected User": "user",
+            "Affected App": "app",
+            "Source IP": "srcip",
+            "Incident Count": "IncidentCount"
+        },
+        "entityMappings": [
+            {
+                "entityType": "Account",
+                "fieldMappings": [
+                    {
+                        "identifier": "FullName",
+                        "value": "user"
+                    }
+                ]
+            },
+            {
+                "entityType": "IP",
+                "fieldMappings": [
+                    {
+                        "identifier": "Address",
+                        "value": "srcip"
+                    }
+                ]
+            },
+            {
+                "entityType": "CloudApplication",
+                "fieldMappings": [
+                    {
+                        "identifier": "Name",
+                        "value": "app"
+                    }
+                ]
+            }
+        ],
+        "kind": "Scheduled"
+      }
+    }
+  ]
+}
