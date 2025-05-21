@@ -5,7 +5,7 @@
     "workspaceName": {
       "type": "string",
       "metadata": {
-        "description": "The name of the Log Analytics workspace (and Microsoft Sentinel workspace) where the analytic rule will be deployed."
+        "description": "The name of the Log Analytics workspace (and Microsoft Sentinel workspace)."
       }
     },
     "alertRuleName": {
@@ -14,81 +14,99 @@
       "metadata": {
         "description": "Name for the Microsoft Sentinel analytic rule."
       }
+    },
+    "workspaceLocation": { // Added for explicit location if needed, though resourceGroup().location is default
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "The location of the Log Analytics workspace."
+      }
     }
   },
   "resources": [
     {
-      // Corrected type: Alert rule is a child resource of the Log Analytics Workspace
-      "type": "Microsoft.OperationalInsights/workspaces/providers/Microsoft.SecurityInsights/alertRules",
-      "apiVersion": "2023-08-01-preview",
-      // Corrected name: Concatenates workspace name and rule name for child resource
-      "name": "[concat(parameters('workspaceName'), '/', parameters('alertRuleName'))]",
-      "dependsOn": [
-        // Dependency on the parent Log Analytics Workspace itself
-        "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]"
-      ],
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2020-08-01", // API version for Log Analytics Workspace resource
+      "name": "[parameters('workspaceName')]",
+      "location": "[parameters('workspaceLocation')]",
       "properties": {
-        "displayName": "Netskope: High Volume of DLP Incidents Detected",
-        "description": "Detects a high volume of Data Loss Prevention (DLP) incidents from Netskope web transactions within a 1-hour period. This rule triggers if any DLP incidents are found (threshold > 0), indicating potential policy violations or data exfiltration attempts.",
-        "query": "NetskopeWebTransactions5_CL\\n| where TimeGenerated > ago(1h)\\n| where isnotempty(dlp_incident_id)\\n| summarize IncidentCount = count() by dlp_rule_severity, dlp_rule, user, app, srcip\\n| where IncidentCount > 0\\n| extend AccountCustomEntity = user\\n| extend IPCustomEntity = srcip\\n| extend CloudApplicationCustomEntity = app",
-        "queryFrequency": "PT5M",
-        "queryPeriod": "PT1H",
-        "triggerOperator": "GreaterThan",
-        "triggerThreshold": 0,
-        "severity": "Medium",
-        "tactics": [
-          "Exfiltration",
-          "Collection"
-        ],
-        "enabled": true,
-        "suppressionDuration": "PT1H",
-        "suppressionEnabled": true,
-        "eventGroupingSettings": {
-          "aggregationKind": "AlertPerResult"
-        },
-        "alertDetailsOverride": {
-            "alertDisplayNameFormat": "Netskope: High DLP Incidents - Rule '{{dlp_rule}}' by '{{user}}' on '{{app}}'",
-            "alertDescriptionFormat": "Detected {{IncidentCount}} DLP incidents for rule '{{dlp_rule}}' with severity '{{dlp_rule_severity}}' involving user '{{user}}' and application '{{app}}' from IP '{{srcip}}'."
-        },
-        "customDetails": {
-            "DLP Rule": "dlp_rule",
-            "DLP Severity": "dlp_rule_severity",
-            "Affected User": "user",
-            "Affected App": "app",
-            "Source IP": "srcip",
-            "Incident Count": "IncidentCount"
-        },
-        "entityMappings": [
-            {
-                "entityType": "Account",
-                "fieldMappings": [
-                    {
-                        "identifier": "FullName",
-                        "value": "user"
-                    }
-                ]
+        "sku": {
+          "name": "PerGB2018" // Example SKU, change if needed
+        }
+      },
+      "resources": [
+        // This is where the nested Analytic Rule is defined
+        {
+          "type": "providers/Microsoft.SecurityInsights/alertRules", // Corrected type for nested extension resource
+          "apiVersion": "2023-08-01-preview", // API version for Alert Rules
+          "name": "[parameters('alertRuleName')]", // Name is just the rule's unique name here
+          "dependsOn": [
+            "[parameters('workspaceName')]" // Dependency on the parent workspace by its name
+          ],
+          "properties": {
+            "displayName": "Netskope: High Volume of DLP Incidents Detected",
+            "description": "Detects a high volume of Data Loss Prevention (DLP) incidents from Netskope web transactions within a 1-hour period. This rule triggers if any DLP incidents are found (threshold > 0), indicating potential policy violations or data exfiltration attempts.",
+            "query": "NetskopeWebTransactions5_CL\\n| where TimeGenerated > ago(1h)\\n| where isnotempty(dlp_incident_id)\\n| summarize IncidentCount = count() by dlp_rule_severity, dlp_rule, user, app, srcip\\n| where IncidentCount > 0\\n| extend AccountCustomEntity = user\\n| extend IPCustomEntity = srcip\\n| extend CloudApplicationCustomEntity = app",
+            "queryFrequency": "PT5M",
+            "queryPeriod": "PT1H",
+            "triggerOperator": "GreaterThan",
+            "triggerThreshold": 0,
+            "severity": "Medium",
+            "tactics": [
+              "Exfiltration",
+              "Collection"
+            ],
+            "enabled": true,
+            "suppressionDuration": "PT1H",
+            "suppressionEnabled": true,
+            "eventGroupingSettings": {
+              "aggregationKind": "AlertPerResult"
             },
-            {
-                "entityType": "IP",
-                "fieldMappings": [
-                    {
-                        "identifier": "Address",
-                        "value": "srcip"
-                    }
-                ]
+            "alertDetailsOverride": {
+                "alertDisplayNameFormat": "Netskope: High DLP Incidents - Rule '{{dlp_rule}}' by '{{user}}' on '{{app}}'",
+                "alertDescriptionFormat": "Detected {{IncidentCount}} DLP incidents for rule '{{dlp_rule}}' with severity '{{dlp_rule_severity}}' involving user '{{user}}' and application '{{app}}' from IP '{{srcip}}'."
             },
-            {
-                "entityType": "CloudApplication",
-                "fieldMappings": [
-                    {
-                        "identifier": "Name",
-                        "value": "app"
-                    }
-                ]
-            }
-        ],
-        "kind": "Scheduled" // This is a property of the Scheduled alert rule kind
-      }
+            "customDetails": {
+                "DLP Rule": "dlp_rule",
+                "DLP Severity": "dlp_rule_severity",
+                "Affected User": "user",
+                "Affected App": "app",
+                "Source IP": "srcip",
+                "Incident Count": "IncidentCount"
+            },
+            "entityMappings": [
+                {
+                    "entityType": "Account",
+                    "fieldMappings": [
+                        {
+                            "identifier": "FullName",
+                            "value": "user"
+                        }
+                    ]
+                },
+                {
+                    "entityType": "IP",
+                    "fieldMappings": [
+                        {
+                            "identifier": "Address",
+                            "value": "srcip"
+                        }
+                    ]
+                },
+                {
+                    "entityType": "CloudApplication",
+                    "fieldMappings": [
+                        {
+                            "identifier": "Name",
+                            "value": "app"
+                        }
+                    ]
+                }
+            ],
+            "kind": "Scheduled"
+          }
+        }
+      ]
     }
   ]
 }
