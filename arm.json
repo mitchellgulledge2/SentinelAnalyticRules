@@ -5,13 +5,7 @@
     "workspaceName": {
       "type": "string",
       "metadata": {
-        "description": "The name of the Log Analytics workspace (and Microsoft Sentinel workspace)."
-      }
-    },
-    "workspaceResourceId": {
-      "type": "string",
-      "metadata": {
-        "description": "The full Resource ID of the Log Analytics workspace (e.g., /subscriptions/<subid>/resourceGroups/<rgname>/providers/Microsoft.OperationalInsights/workspaces/<wsname>)."
+        "description": "The name of the Log Analytics workspace (and Microsoft Sentinel workspace) where the analytic rule will be deployed."
       }
     },
     "alertRuleName": {
@@ -24,11 +18,14 @@
   },
   "resources": [
     {
-      "type": "Microsoft.SecurityInsights/alertRules",
+      // Corrected type: Alert rule is a child resource of the Log Analytics Workspace
+      "type": "Microsoft.OperationalInsights/workspaces/providers/Microsoft.SecurityInsights/alertRules",
       "apiVersion": "2023-08-01-preview",
-      "name": "[parameters('alertRuleName')]",
+      // Corrected name: Concatenates workspace name and rule name for child resource
+      "name": "[concat(parameters('workspaceName'), '/', parameters('alertRuleName'))]",
       "dependsOn": [
-        "[parameters('workspaceResourceId')]"
+        // Dependency on the parent Log Analytics Workspace itself
+        "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]"
       ],
       "properties": {
         "displayName": "Netskope: High Volume of DLP Incidents Detected",
@@ -90,7 +87,7 @@
                 ]
             }
         ],
-        "kind": "Scheduled"
+        "kind": "Scheduled" // This is a property of the Scheduled alert rule kind
       }
     }
   ]
