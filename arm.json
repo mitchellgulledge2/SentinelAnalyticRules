@@ -15,7 +15,7 @@
         "description": "Name for the Microsoft Sentinel analytic rule."
       }
     },
-    "workspaceLocation": { // Added for explicit location if needed, though resourceGroup().location is default
+    "workspaceLocation": { // THIS PARAMETER IS NEW/ADDED
       "type": "string",
       "defaultValue": "[resourceGroup().location]",
       "metadata": {
@@ -26,22 +26,21 @@
   "resources": [
     {
       "type": "Microsoft.OperationalInsights/workspaces",
-      "apiVersion": "2020-08-01", // API version for Log Analytics Workspace resource
+      "apiVersion": "2020-08-01",
       "name": "[parameters('workspaceName')]",
-      "location": "[parameters('workspaceLocation')]",
+      "location": "[parameters('workspaceLocation')]", // Uses the new parameter
       "properties": {
         "sku": {
-          "name": "PerGB2018" // Example SKU, change if needed
+          "name": "PerGB2018"
         }
       },
       "resources": [
-        // This is where the nested Analytic Rule is defined
         {
-          "type": "providers/Microsoft.SecurityInsights/alertRules", // Corrected type for nested extension resource
-          "apiVersion": "2023-08-01-preview", // API version for Alert Rules
-          "name": "[parameters('alertRuleName')]", // Name is just the rule's unique name here
+          "type": "providers/Microsoft.SecurityInsights/alertRules",
+          "apiVersion": "2023-08-01-preview",
+          "name": "[parameters('alertRuleName')]",
           "dependsOn": [
-            "[parameters('workspaceName')]" // Dependency on the parent workspace by its name
+            "[parameters('workspaceName')]"
           ],
           "properties": {
             "displayName": "Netskope: High Volume of DLP Incidents Detected",
@@ -83,7 +82,8 @@
                             "value": "user"
                         }
                     ]
-                },
+                }
+                ,
                 {
                     "entityType": "IP",
                     "fieldMappings": [
