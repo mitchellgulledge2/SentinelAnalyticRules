@@ -130,7 +130,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication\n| where isnotempty(App)\n| summarize arg_max(TimeGenerated,*) by Id\n| summarize Count = count() by Application = App\n| sort by Count desc",
+              "query": "Netskope_Events\n| where isnotempty(App)\n| summarize arg_max(TimeGenerated,*) by Id\n| summarize Count = count() by Application = App\n| sort by Count desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Top Applications By Usage",
@@ -181,7 +181,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where App == '{ApplicationName1}'\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by User\r\n| top 50 by Count",
+              "query": "Netskope_Events \r\n| where App == '{ApplicationName1}'\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by User\r\n| top 50 by Count",
               "size": 0,
               "showAnalytics": true,
               "title": "Top 50 Users Of {ApplicationName1}",
@@ -222,7 +222,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(App)\r\n| summarize arg_max(TimeGenerated,*) by App\r\n| sort by CCI desc\r\n| project Application = App, ['CCI SCORE'] = CCI",
+              "query": "Netskope_Events \r\n| where isnotempty(App)\r\n| summarize arg_max(TimeGenerated,*) by App\r\n| sort by CCI desc\r\n| project Application = App, ['CCI SCORE'] = CCI",
               "size": 0,
               "showAnalytics": true,
               "title": "Top Applications By CCI Score",
@@ -260,7 +260,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where App == '{ApplicationName2}'\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by User\r\n| top 50 by Count",
+              "query": "Netskope_Events \r\n| where App == '{ApplicationName2}'\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by User\r\n| top 50 by Count",
               "size": 0,
               "showAnalytics": true,
               "title": "Top 50 Users Of {ApplicationName2}",
@@ -308,7 +308,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(AppCategory)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by AppCategory\r\n| sort by Count desc",
+              "query": "Netskope_Events \r\n| where isnotempty(AppCategory)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by AppCategory\r\n| sort by Count desc",
               "size": 3,
               "showAnalytics": true,
               "title": "Top Categories",
@@ -342,7 +342,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(Browser)\r\n| summarize arg_max(TimeGenerated,*) by Id   \r\n| summarize Count = count() by Browser\r\n| sort by Count desc",
+              "query": "Netskope_Events \r\n| where isnotempty(Browser)\r\n| summarize arg_max(TimeGenerated,*) by Id   \r\n| summarize Count = count() by Browser\r\n| sort by Count desc",
               "size": 3,
               "showAnalytics": true,
               "title": "Browser Breakdown",
@@ -388,7 +388,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where AppCategory == '{CategoryName}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
+              "query": "Netskope_Events \r\n| where AppCategory == '{CategoryName}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
               "size": 0,
               "showAnalytics": true,
               "title": "Application Details For {CategoryName}",
@@ -417,7 +417,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where Browser == '{BrowserName}'\r\n| summarize arg_max(TimeGenerated,*) by Id  ",
+              "query": "Netskope_Events \r\n| where Browser == '{BrowserName}'\r\n| summarize arg_max(TimeGenerated,*) by Id  ",
               "size": 0,
               "showAnalytics": true,
               "title": "Application Details For {BrowserName}",
@@ -446,7 +446,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication\r\n| where isnotempty(DeviceClassification)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by DeviceClassification\r\n| sort by Count desc",
+              "query": "Netskope_Events\r\n| where isnotempty(DeviceClassification)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by DeviceClassification\r\n| sort by Count desc",
               "size": 3,
               "showAnalytics": true,
               "title": "Device Classification",
@@ -482,7 +482,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(CCL)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by CCL\r\n| sort by Count desc",
+              "query": "Netskope_Events \r\n| where isnotempty(CCL)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by CCL\r\n| sort by Count desc",
               "size": 3,
               "showAnalytics": true,
               "title": "Cloud Confidence Level Breakdown",
@@ -528,7 +528,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication\r\n| where DeviceClassification == '{DeviceClassificationName}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
+              "query": "Netskope_Events\r\n| where DeviceClassification == '{DeviceClassificationName}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
               "size": 0,
               "showAnalytics": true,
               "title": "Application Details For {DeviceClassificationName}",
@@ -557,7 +557,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where CCL == \"{CCL}\"\r\n| summarize arg_max(TimeGenerated,*) by Id",
+              "query": "Netskope_Events \r\n| where CCL == \"{CCL}\"\r\n| summarize arg_max(TimeGenerated,*) by Id",
               "size": 0,
               "showAnalytics": true,
               "title": "Application Details For Cloud Confidence Level {CCL}",
@@ -586,7 +586,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(Device)\r\n| extend Device = iff(Device == \"Other\", \"Other (value in Data)\", Device)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by Device\r\n| sort by Count desc",
+              "query": "Netskope_Events \r\n| where isnotempty(Device)\r\n| extend Device = iff(Device == \"Other\", \"Other (value in Data)\", Device)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by Device\r\n| sort by Count desc",
               "size": 3,
               "showAnalytics": true,
               "title": "Device Breakdown",
@@ -622,7 +622,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(Activity)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count()  by Activity\r\n| top 10 by Count",
+              "query": "Netskope_Events \r\n| where isnotempty(Activity)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count()  by Activity\r\n| top 10 by Count",
               "size": 0,
               "showAnalytics": true,
               "title": "Top 10 Application Activities",
@@ -665,7 +665,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication\r\n| where Device == (case(\"{DeviceName}\"==\"Other\",\"Other(Grouped Value)\",\"{DeviceName}\"==\"Other (value in Data)\",\"Other\",\"{DeviceName}\"))\r\n| summarize arg_max(TimeGenerated,*) by Id",
+              "query": "Netskope_Events\r\n| where Device == (case(\"{DeviceName}\"==\"Other\",\"Other(Grouped Value)\",\"{DeviceName}\"==\"Other (value in Data)\",\"Other\",\"{DeviceName}\"))\r\n| summarize arg_max(TimeGenerated,*) by Id",
               "size": 0,
               "showAnalytics": true,
               "title": "Application Details For Device {DeviceName}",
@@ -694,7 +694,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where Activity == '{ActivityName}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
+              "query": "Netskope_Events \r\n| where Activity == '{ActivityName}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
               "size": 0,
               "showAnalytics": true,
               "title": "Application Details For Activity {ActivityName}",
@@ -723,7 +723,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(User)and isnotempty(AccessMethod)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by User, ['Access Method'] = AccessMethod\r\n| sort by Count desc",
+              "query": "Netskope_Events \r\n| where isnotempty(User)and isnotempty(AccessMethod)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by User, ['Access Method'] = AccessMethod\r\n| sort by Count desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Top Users By Access Method",
@@ -781,7 +781,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where User == '{UserName}'\r\n    and AccessMethod == '{AccessMethod}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
+              "query": "Netskope_Events \r\n| where User == '{UserName}'\r\n    and AccessMethod == '{AccessMethod}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
               "size": 0,
               "showAnalytics": true,
               "title": "Application Details For User {UserName} And Access Method {AccessMethod}",
@@ -820,7 +820,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(User) and isnotempty( App)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize ['Total Client Bytes'] = sum(todecimal(ClientBytes)),['Total Server Bytes'] =sum(todecimal(ServerBytes)) by User,Application = App\r\n ",
+              "query": "Netskope_Events \r\n| where isnotempty(User) and isnotempty( App)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize ['Total Client Bytes'] = sum(todecimal(ClientBytes)),['Total Server Bytes'] =sum(todecimal(ServerBytes)) by User,Application = App\r\n ",
               "size": 0,
               "showAnalytics": true,
               "title": "Bytes Transferred",
@@ -863,7 +863,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(OS)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by OS\r\n| sort by Count desc\r\n",
+              "query": "Netskope_Events \r\n| where isnotempty(OS)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by OS\r\n| sort by Count desc\r\n",
               "size": 0,
               "showAnalytics": true,
               "title": "OS Breakdown",
@@ -902,7 +902,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where isnotempty(App) and isnotempty(Category)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by Application = App, Category\r\n| sort by Count desc",
+              "query": "Netskope_Events \r\n| where isnotempty(App) and isnotempty(Category)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by Application = App, Category\r\n| sort by Count desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Applications Accessed (w/App Category)",
@@ -967,7 +967,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication\r\n| where OS == '{os}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
+              "query": "Netskope_Events\r\n| where OS == '{os}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
               "size": 0,
               "showAnalytics": true,
               "title": "Application Details For {os}",
@@ -999,7 +999,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "EventsApplication \r\n| where App == '{app}'\r\n    and Category == '{category}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
+              "query": "Netskope_Events \r\n| where App == '{app}'\r\n    and Category == '{category}'\r\n| summarize arg_max(TimeGenerated,*) by Id",
               "size": 0,
               "showAnalytics": true,
               "title": "Application Details For Application {app} And Category {category}",
