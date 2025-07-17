@@ -1127,7 +1127,7 @@
                   "multiSelect": true,
                   "quote": "'",
                   "delimiter": ",",
-                  "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where isnotempty(AlertType)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| distinct tolower(AlertType)",
+                  "query": "Netskope_Alerts\r\n| where isnotempty(AlertType)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| distinct tolower(AlertType)",
                   "typeSettings": {
                     "additionalResourceOptions": [
                       "value::all"
@@ -1160,7 +1160,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\n| where isnotempty(DlpFile)\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\n| summarize arg_max(TimeGenerated,*) by Id\n| summarize Count = count() by DlpFile\n| top 10 by Count",
+              "query": "Netskope_Alerts\n| where isnotempty(DlpFile)\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\n| summarize arg_max(TimeGenerated,*) by Id\n| summarize Count = count() by DlpFile\n| top 10 by Count",
               "size": 3,
               "showAnalytics": true,
               "title": "Top 10 File Matches For DLP",
@@ -1188,7 +1188,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where isnotempty(App)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize  Count = count() by App\r\n| top 10 by Count",
+              "query": "Netskope_Alerts\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where isnotempty(App)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize  Count = count() by App\r\n| top 10 by Count",
               "size": 3,
               "showAnalytics": true,
               "title": "Top 10 Applications Triggering Alerts",
@@ -1296,7 +1296,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where App == \"{AppName}\"\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| sort by TimeGenerated desc",
+              "query": "Netskope_Alerts\r\n| where App == \"{AppName}\"\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| sort by TimeGenerated desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Alert Details For {AppName}",
@@ -1325,7 +1325,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by tolower(AlertType)\r\n| sort by Count desc",
+              "query": "Netskope_Alerts\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by tolower(AlertType)\r\n| sort by Count desc",
               "size": 3,
               "showAnalytics": true,
               "title": "Alert Type Breakdown",
@@ -1360,7 +1360,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where isnotempty(DlpProfile)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by DlpProfile\r\n| top 10 by Count",
+              "query": "Netskope_Alerts\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where isnotempty(DlpProfile)\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by DlpProfile\r\n| top 10 by Count",
               "size": 3,
               "showAnalytics": true,
               "title": "Top 10 DLP Profiles",
@@ -1388,7 +1388,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where isnotempty(DlpRule) and isnotempty(DlpRuleSeverity)\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize  Count = count() by Rule = DlpRule, Severity = DlpRuleSeverity\r\n| top 10 by Count",
+              "query": "Netskope_Alerts\r\n| where isnotempty(DlpRule) and isnotempty(DlpRuleSeverity)\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize  Count = count() by Rule = DlpRule, Severity = DlpRuleSeverity\r\n| top 10 by Count",
               "size": 0,
               "showAnalytics": true,
               "title": "Top 10 DLP Rules",
@@ -1435,7 +1435,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where isnotempty(Policy)\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by Policy\r\n| top 10 by Count",
+              "query": "Netskope_Alerts\r\n| where isnotempty(Policy)\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by Policy\r\n| top 10 by Count",
               "size": 0,
               "showAnalytics": true,
               "title": "Top 10 Policy Hits",
@@ -1473,7 +1473,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where isnotempty(AccessMethod) and isnotempty(Policy)\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by Policy,Method = AccessMethod\r\n| sort by Count desc",
+              "query": "Netskope_Alerts\r\n| where isnotempty(AccessMethod) and isnotempty(Policy)\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| summarize Count = count() by Policy,Method = AccessMethod\r\n| sort by Count desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Policy Alerts by Access Method",
@@ -1542,7 +1542,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where DlpRule =~ \"{DlpRuleSelected}\" and DlpRuleSeverity =~ '{DlpSeveritySelected}'\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| sort by TimeGenerated desc",
+              "query": "Netskope_Alerts\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where DlpRule =~ \"{DlpRuleSelected}\" and DlpRuleSeverity =~ '{DlpSeveritySelected}'\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| sort by TimeGenerated desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Alert Details For Dlp Rule {DlpRuleSelected} and Severity {DlpSeveritySelected}",
@@ -1570,7 +1570,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where Policy =~ \"{PolicyName}\"\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| sort by TimeGenerated desc",
+              "query": "Netskope_Alerts\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where Policy =~ \"{PolicyName}\"\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| sort by TimeGenerated desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Alert Details For {PolicyName}",
@@ -1599,7 +1599,7 @@
             "type": 3,
             "content": {
               "version": "KqlItem/1.0",
-              "query": "union isfuzzy=true AlertsDLP,AlertsCtep,AlertsCompromisedCredential,AlertsMalsite,AlertsMalware,AlertsPolicy,AlertsQuarantine,AlertsRemediation,AlertsSecurityAssessment,AlertsUba\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where Policy =~ \"{PolicyName2}\" and AccessMethod =~ '{AccessMethodName}'\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| sort by TimeGenerated desc",
+              "query": "Netskope_Alerts\r\n| where ('{TypeOfAlert:escapejson}' == '*' or AlertType in~ ({TypeOfAlert}))\r\n| where Policy =~ \"{PolicyName2}\" and AccessMethod =~ '{AccessMethodName}'\r\n| summarize arg_max(TimeGenerated,*) by Id\r\n| sort by TimeGenerated desc",
               "size": 0,
               "showAnalytics": true,
               "title": "Alert Details For Policy {PolicyName2} and Access Method {AccessMethodName}",
